@@ -28,4 +28,5 @@ Just download the [maze game.py](https://github.com/veldahung/group21_project/bl
 
 ## Authors
 veldahung
+Cyw-twntpc
 
