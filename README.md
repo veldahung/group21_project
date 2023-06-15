@@ -23,7 +23,7 @@ This is a maze game with three modes: easy, normal and hard. You can choose sing
 
 ### Installing
 Just download the maze game.py file on this github repositary.
-[a link]([https://github.com/veldahung/group21_project/blob/0789842eb9e1e8696ccde638d7399d710dad441c/maze%20game.py])
+[a link](maze game.py)
 
 ### Executing Program
 
