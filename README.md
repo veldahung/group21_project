@@ -1,7 +1,7 @@
 # group21_final_project_Maze
 
 ## Description
-This is a maze game with three modes: easy, normal and hard. You can choose to compete with the computer or not.
+This is a maze game with three modes : easy, normal and hard. You can choose to compete with the computer or not.
 
 ## Getting Started
 
