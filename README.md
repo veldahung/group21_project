@@ -22,7 +22,7 @@ This is a maze game with three modes : easy, normal and hard. You can choose to 
 2. You can run the code on such as visual studio code or any environment you like.
 
 ### Installing
-Just download the [maze game.py](https://github.com/veldahung/group21_project/blob/5539d27e94912264d3431e44089ccc48b72e0597/maze%20game.py) file on this github repositary.
+Just download the [maze game.py](https://github.com/veldahung/group21_project/blob/ef8a0d807b57ab7a6e47f8ff41331940ca6e664b/maze%20game.py) file on this github repositary.
 
 ### Executing Program
 <br />Just run the code you have just downloaded on any environment you would like to run the python code.</br >
