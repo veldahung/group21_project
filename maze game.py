@@ -50,7 +50,7 @@ Game = {
     },
     "setting":{
         "game mode": 0,
-        "player number": 1,
+        "player color": (255, 0, 0),
         "connect":{
             "role": None,
             "room": None,
@@ -259,6 +259,10 @@ class StartScreen:
                 if event.type == pygame.QUIT:
                     Game['system']['running'] = False
                     Game['screen']['start'] = False
+                    if Game['setting']['connect']['role'] == 0:
+                        server.server_socket.close()
+                    elif Game['setting']['connect']['role'] == 1:
+                        client.client_socket.close()
                     sys.exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if self.start_button.rect.collidepoint(event.pos):
@@ -303,6 +307,10 @@ class DifficultyScreen:
                 if event.type == pygame.QUIT:
                     Game['system']['running'] = False
                     Game['screen']['difficulty'] = False
+                    if Game['setting']['connect']['role'] == 0:
+                        server.server_socket.close()
+                    elif Game['setting']['connect']['role'] == 1:
+                        client.client_socket.close()
                     sys.exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if self.easy_button.rect.collidepoint(event.pos):
@@ -343,7 +351,7 @@ class GameScreen:
     def run(self):
         running = Game['screen']['game']
         self.generate_walls(Game['variables']['maze'])
-        player = Player(self.origin_pos_x + 3, self.origin_pos_y + 3, 10, 10, (255, 0, 0), self.screen)
+        player = Player(self.origin_pos_x + 3, self.origin_pos_y + 3, 10, 10, Game['setting']['player color'], self.screen)
         computer = MazeSolver(Game['variables']['maze'])
         computer.initialize()
         computer2 = MazeSolver2(Game['variables']['maze'],self.origin_pos_x + 3, self.origin_pos_y + 3, 10, 10, (255, 0, 0), self.screen)
@@ -365,6 +373,10 @@ class GameScreen:
                 if event.type == pygame.QUIT:
                     Game['system']['running'] = False
                     Game['screen']['game'] = False
+                    if Game['setting']['connect']['role'] == 0:
+                        server.server_socket.close()
+                    elif Game['setting']['connect']['role'] == 1:
+                        client.client_socket.close()
                     sys.exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if self.sol_button.rect.collidepoint(event.pos):
@@ -437,6 +449,17 @@ class GameScreen:
                     self.computer_text.draw(self.screen)
                     self.begin_text = Text(begin_str, (Game['system']['window width'] - 35, 20), self.time_font)
                     self.begin_text.draw(self.screen)
+            if Game['setting']['game mode'] == 1:
+                if Game['setting']['connect']['role'] == 0:
+                    Game['variables']['connections']['position'][0] = (player.current_pos_x(), player.current_pos_y())
+                    temp = (5, Game['variables']['connections']['position'])
+                    message = pickle.dumps(temp)
+                    server.broadcast(message)
+                elif Game['setting']['connect']['role'] == 1:
+                    posi = (1, (player.current_pos_x(), player.current_pos_y()))
+                    client.send_message(pickle.dumps(posi))
+                for i in range(len(Game['variables']['connections']['IP'])):
+                    pygame.draw.rect(self.screen, Game['variables']['connections']['color'][i], (Game['variables']['connections']['position'][i][0], Game['variables']['connections']['position'][i][1], 10, 10))
             self.seed_text = f"seed: {Game['variables']['seed']}"
             self.seed = Text(self.seed_text,(80, Game['system']['window height'] - 20), self.seed_font)
             self.seed.draw(self.screen)
@@ -505,6 +528,10 @@ class ResultScreen:
                 if event.type == pygame.QUIT:
                     Game['system']['running'] = False
                     Game['screen']['result'] = False
+                    if Game['setting']['connect']['role'] == 0:
+                        server.server_socket.close()
+                    elif Game['setting']['connect']['role'] == 1:
+                        client.client_socket.close()
                     sys.exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if self.back_button.rect.collidepoint(event.pos):
@@ -676,6 +703,10 @@ class ScoreScreen:
                 if event.type == pygame.QUIT:
                     Game['system']['running'] = False
                     Game['screen']['score'] = False
+                    if Game['setting']['connect']['role'] == 0:
+                        server.server_socket.close()
+                    elif Game['setting']['connect']['role'] == 1:
+                        client.client_socket.close()
                     sys.exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if self.back_button.rect.collidepoint(event.pos):
@@ -903,7 +934,7 @@ class RoomScreen:
             self.normal_button.set_color((0, 0, 0))
             self.hard_button.set_color((255, 0, 0))
         for i in range(len(Game['variables']['connections']['prepare'])):
-            if i != 0:
+            if len(Game['variables']['connections']['prepare']) > 1:
                 if Game['variables']['connections']['prepare'][i] == 0:
                     self.ready_text[i - 1].color = (255, 255, 255)
                 elif Game['variables']['connections']['prepare'][i] == 1:
@@ -1225,20 +1256,25 @@ class Server:
                     received_tuple = pickle.loads(message)
                     if len(received_tuple) == 2 and received_tuple[0] == 4:
                         Game['variables']['connections']['prepare'][i] = received_tuple[1]
+                    if len(received_tuple) == 2 and received_tuple[0] == 1:
+                        Game['variables']['connections']['position'][i] = received_tuple[1]
                 
                 else:
                     Game['variables']['connections']['socket'].pop(i)
-                    Game['variables']['connections']['ID'].pop(i)
+                    Game['variables']['connections']['IP'].pop(i)
                     Game['variables']['connections']['position'].pop(i)
                     Game['variables']['connections']['color'].pop(i)
+                    Game['variables']['connections']['prepare'].pop(i)
                     client_socket.close()
                     break
             except Exception as e:
                 print("Error handling client:", e)
+                i = Game['variables']['connections']['socket'].index(client_socket)
                 Game['variables']['connections']['socket'].pop(i)
-                Game['variables']['connections']['ID'].pop(i)
+                Game['variables']['connections']['IP'].pop(i)
                 Game['variables']['connections']['position'].pop(i)
                 Game['variables']['connections']['color'].pop(i)
+                Game['variables']['connections']['prepare'].pop(i)
                 client_socket.close()
                 break
 
@@ -1260,6 +1296,7 @@ class Server:
             Game['variables']['connections']['IP'].append(client_socket.getsockname()[0])
             Game['variables']['connections']['position'].append((0, 0))
             Game['variables']['connections']['color'].append(color[n])
+            client_socket.send(pickle.dumps((2, color[n])))
             Game['variables']['connections']['prepare'].append(0)
             n += 1
             threading.Thread(target=self.handle_client, args = (client_socket,)).start()
@@ -1290,6 +1327,10 @@ class Client:
                     Game['variables']['connections']['prepare'] = receive_tuple[4]
                 elif len(receive_tuple) == 2 and receive_tuple[0] == 1:
                     Game['setting']['difficulty'] = receive_tuple[1]
+                elif len(receive_tuple) == 2 and receive_tuple[0] == 2:
+                    Game['setting']['player color'] = receive_tuple[1]
+                elif len(receive_tuple) == 2 and receive_tuple[0] == 5:
+                    Game['variables']['connections']['position'] = receive_tuple[1]
                 elif len(receive_tuple) > 10:
                     print(receive_tuple)
                     Game['variables']['maze'] = receive_tuple
@@ -1337,5 +1378,11 @@ while Game['system']['running']:
         current_screen = score_screen
     elif Game['screen']['room']:
         current_screen = room_screen
+    if Game['setting']['game mode'] == 0:
+        if Game['setting']['connect']['role'] == 0:
+            server.server_socket.close()
+        elif Game['setting']['connect']['role'] == 1:
+            client.client_socket.close()
+        Game['setting']['connect']['role'] = None
 
 pygame.quit()
